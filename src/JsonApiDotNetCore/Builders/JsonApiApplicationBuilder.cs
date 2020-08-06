@@ -84,6 +84,7 @@ namespace JsonApiDotNetCore.Builders
                 options.EnableEndpointRouting = true;
                 options.Filters.Add(exceptionFilterProvider.Get());
                 options.Filters.Add(typeMatchFilterProvider.Get());
+                options.Filters.AddService<IQueryStringActionFilter>();
                 options.Filters.Add(new ConvertEmptyActionResultFilter());
                 options.InputFormatters.Insert(0, new JsonApiInputFormatter());
                 options.OutputFormatters.Insert(0, new JsonApiOutputFormatter());

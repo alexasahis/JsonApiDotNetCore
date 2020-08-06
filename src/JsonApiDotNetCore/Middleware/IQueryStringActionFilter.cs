@@ -3,8 +3,8 @@ using Microsoft.AspNetCore.Mvc.Filters;
 
 namespace JsonApiDotNetCore.Middleware
 {
-    public interface IQueryStringActionFilter
+    public interface IQueryStringActionFilter : IAsyncActionFilter
     {
-        Task OnActionExecutionAsync(ActionExecutingContext context, ActionExecutionDelegate next);
+        // Task OnActionExecutionAsync(ActionExecutingContext context, ActionExecutionDelegate next);
     }
 }
