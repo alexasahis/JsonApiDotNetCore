@@ -7,6 +7,12 @@ namespace JsonApiDotNetCore.Middleware
 {
     public sealed class ConvertEmptyActionResultFilter : IAlwaysRunResultFilter
     {
+        /// <summary>
+        /// Converts action result without parameters into action result with null parameter.
+        /// For example: return NotFound() -> return NotFound(null)
+        /// This ensures our formatter is invoked, where we'll build a json:api compliant response.
+        /// For details, see: https://github.com/dotnet/aspnetcore/issues/16969
+        /// </summary>
         public void OnResultExecuted(ResultExecutedContext context)
         {
         }
@@ -22,11 +28,7 @@ namespace JsonApiDotNetCore.Middleware
             {
                 return;
             }
-
-            // Convert action result without parameters into action result with null parameter.
-            // For example: return NotFound() -> return NotFound(null)
-            // This ensures our formatter is invoked, where we'll build a json:api compliant response.
-            // For details, see: https://github.com/dotnet/aspnetcore/issues/16969
+            
             if (context.Result is IStatusCodeActionResult statusCodeResult)
             {
                 context.Result = new ObjectResult(null) {StatusCode = statusCodeResult.StatusCode};
