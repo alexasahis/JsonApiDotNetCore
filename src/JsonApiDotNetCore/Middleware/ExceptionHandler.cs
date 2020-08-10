@@ -7,7 +7,15 @@ using JsonApiDotNetCore.Models.JsonApiDocuments;
 using Microsoft.Extensions.Logging;
 
 namespace JsonApiDotNetCore.Middleware
-{
+{    
+    /// <summary>
+    /// Central place to handle all exceptions. Log them and translate into Error response.
+    /// </summary>
+    public interface IExceptionHandler
+    {
+        ErrorDocument HandleException(Exception exception);
+    }
+        
     public class ExceptionHandler : IExceptionHandler
     {
         private readonly IJsonApiOptions _options;
@@ -21,7 +29,7 @@ namespace JsonApiDotNetCore.Middleware
 
         public ErrorDocument HandleException(Exception exception)
         {
-            Exception demystified = exception.Demystify();
+            var demystified = exception.Demystify();
 
             LogException(demystified);
 
@@ -60,7 +68,7 @@ namespace JsonApiDotNetCore.Middleware
                 return new ErrorDocument(modelStateException.Errors);
             }
 
-            Error error = exception is JsonApiException jsonApiException
+            var error = exception is JsonApiException jsonApiException
                 ? jsonApiException.Error
                 : new Error(HttpStatusCode.InternalServerError)
                 {

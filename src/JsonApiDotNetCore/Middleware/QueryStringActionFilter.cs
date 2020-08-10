@@ -7,6 +7,10 @@ using Microsoft.AspNetCore.Mvc.Filters;
 
 namespace JsonApiDotNetCore.Middleware
 {
+    /// <summary>
+    /// Entry point for processing all query string parameters.
+    /// </summary>
+    public interface IQueryStringActionFilter : IAsyncActionFilter { }
     public sealed class QueryStringActionFilter : IQueryStringActionFilter
     {
         private readonly IQueryStringReader _queryStringReader;
@@ -23,7 +27,7 @@ namespace JsonApiDotNetCore.Middleware
                 return;
             }
             
-            DisableQueryAttribute disableQueryAttribute = context.Controller.GetType().GetCustomAttribute<DisableQueryAttribute>();
+            var disableQueryAttribute = context.Controller.GetType().GetCustomAttribute<DisableQueryAttribute>();
 
             _queryStringReader.ReadAll(disableQueryAttribute);
             await next();

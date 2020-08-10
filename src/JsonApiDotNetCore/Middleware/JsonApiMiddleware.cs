@@ -74,58 +74,64 @@ namespace JsonApiDotNetCore.Middleware
         private static async Task<bool> ValidateContentTypeHeaderAsync(HttpContext httpContext, JsonSerializerSettings serializerSettings)
         {
             var contentType = httpContext.Request.ContentType;
-            if (contentType != null && contentType != HeaderConstants.MediaType)
+            if (contentType == null || contentType == HeaderConstants.MediaType)
             {
-                await FlushResponseAsync(httpContext.Response, serializerSettings, new Error(HttpStatusCode.UnsupportedMediaType)
-                {
-                    Title = "The specified Content-Type header value is not supported.",
-                    Detail = $"Please specify '{HeaderConstants.MediaType}' instead of '{contentType}' for the Content-Type header value."
-                });
-                return false;
+                return true;
             }
+            
+            await FlushResponseAsync(httpContext.Response, serializerSettings, new Error(HttpStatusCode.UnsupportedMediaType)
+            {
+                Title = "The specified Content-Type header value is not supported.",
+                Detail = $"Please specify '{HeaderConstants.MediaType}' instead of '{contentType}' for the Content-Type header value."
+            });
+            return false;
 
-            return true;
         }
 
         private static async Task<bool> ValidateAcceptHeaderAsync(HttpContext httpContext, JsonSerializerSettings serializerSettings)
         {
-            StringValues acceptHeaders = httpContext.Request.Headers["Accept"];
+            var acceptHeaders = httpContext.Request.Headers["Accept"];
             if (!acceptHeaders.Any() || acceptHeaders == HeaderConstants.MediaType)
             {
                 return true;
             }
 
-            bool seenCompatibleMediaType = false;
+            var seenCompatibleMediaType = false;
 
             foreach (var acceptHeader in acceptHeaders)
             {
-                if (MediaTypeHeaderValue.TryParse(acceptHeader, out var headerValue))
+                if (!MediaTypeHeaderValue.TryParse(acceptHeader, out var headerValue))
                 {
-                    if (headerValue.MediaType == "*/*" || headerValue.MediaType == "application/*")
-                    {
-                        seenCompatibleMediaType = true;
-                        break;
-                    }
-
-                    if (headerValue.MediaType == HeaderConstants.MediaType && !headerValue.Parameters.Any())
-                    {
-                        seenCompatibleMediaType = true;
-                        break;
-                    }
+                    continue;
                 }
-            }
-
-            if (!seenCompatibleMediaType)
-            {
-                await FlushResponseAsync(httpContext.Response, serializerSettings, new Error(HttpStatusCode.NotAcceptable)
+                
+                if (headerValue.MediaType == "*/*" || headerValue.MediaType == "application/*")
                 {
-                    Title = "The specified Accept header value does not contain any supported media types.",
-                    Detail = $"Please include '{HeaderConstants.MediaType}' in the Accept header values."
-                });
-                return false;
+                    seenCompatibleMediaType = true;
+                    break;
+                }
+
+                if (headerValue.MediaType != HeaderConstants.MediaType || headerValue.Parameters.Any())
+                {
+                    continue;
+                }
+                
+                seenCompatibleMediaType = true;
+                break;
             }
 
-            return true;
+            if (seenCompatibleMediaType)
+            {
+                return true;
+            }
+            
+            await FlushResponseAsync(httpContext.Response, serializerSettings, new Error(HttpStatusCode.NotAcceptable)
+            {
+                Title = "The specified Accept header value does not contain any supported media types.",
+                Detail = $"Please include '{HeaderConstants.MediaType}' in the Accept header values."
+            });
+            
+            return false;
         }
 
         private static async Task FlushResponseAsync(HttpResponse httpResponse, JsonSerializerSettings serializerSettings, Error error)

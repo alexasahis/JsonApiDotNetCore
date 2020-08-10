@@ -191,7 +191,7 @@ namespace JsonApiDotNetCore.Builders
             _services.AddScoped<IQueryLayerComposer, QueryLayerComposer>();
             _services.TryAddSingleton<IExceptionHandler, ExceptionHandler>();
             _services.TryAddScoped<IJsonApiExceptionFilter, JsonApiExceptionFilter>();
-            _services.TryAddScoped<IJsonApiTypeMatchFilter, IncomingTypeMatchFilter>();
+            _services.TryAddScoped<IJsonApiTypeMatchFilter, JsonApiTypeMatchFilter>();
 
             AddServerSerialization();
             AddQueryStringParameterServices();
