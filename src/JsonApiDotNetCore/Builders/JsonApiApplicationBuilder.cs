@@ -62,8 +62,8 @@ namespace JsonApiDotNetCore.Builders
         {
             RegisterJsonApiStartupServices();
 
-            IJsonApiExceptionFilterProvider exceptionFilterProvider;
-            IJsonApiTypeMatchFilterProvider typeMatchFilterProvider;
+            IJsonApiTypeMatchFilter typeMatchFilterService;
+            IJsonApiExceptionFilter exceptionFilterService;
             IJsonApiRoutingConvention routingConvention;
 
             using (var intermediateProvider = _services.BuildServiceProvider())
@@ -74,16 +74,19 @@ namespace JsonApiDotNetCore.Builders
 
                 AddResourceTypesFromDbContext(intermediateProvider);
 
-                exceptionFilterProvider = intermediateProvider.GetRequiredService<IJsonApiExceptionFilterProvider>();
-                typeMatchFilterProvider = intermediateProvider.GetRequiredService<IJsonApiTypeMatchFilterProvider>();
+                // exceptionFilterService = intermediateProvider.GetRequiredService<IJsonApiExceptionFilter>();
+                // typeMatchFilterService = intermediateProvider.GetRequiredService<IJsonApiTypeMatchFilter>();
                 routingConvention = intermediateProvider.GetRequiredService<IJsonApiRoutingConvention>();
             }
 
             _mvcBuilder.AddMvcOptions(options =>
             {
                 options.EnableEndpointRouting = true;
-                options.Filters.Add(exceptionFilterProvider.Get());
-                options.Filters.Add(typeMatchFilterProvider.Get());
+                // options.Filters.Add(exceptionFilterService);
+                // options.Filters.Add(typeMatchFilterService);
+    
+                options.Filters.AddService<IJsonApiExceptionFilter>();
+                options.Filters.AddService<IJsonApiTypeMatchFilter>();
                 options.Filters.AddService<IQueryStringActionFilter>();
                 options.Filters.Add(new ConvertEmptyActionResultFilter());
                 options.InputFormatters.Insert(0, new JsonApiInputFormatter());
@@ -182,7 +185,6 @@ namespace JsonApiDotNetCore.Builders
             _services.AddSingleton(resourceGraph);
             _services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
             _services.AddSingleton<IResourceContextProvider>(resourceGraph);
-            _services.AddSingleton<IExceptionHandler, ExceptionHandler>();
 
             _services.AddScoped<ICurrentRequest, CurrentRequest>();
             _services.AddScoped<IScopedServiceProvider, RequestScopedServiceProvider>();
@@ -197,11 +199,16 @@ namespace JsonApiDotNetCore.Builders
             _services.AddScoped<IResourceFactory, ResourceFactory>();
             _services.AddScoped<IPaginationContext, PaginationContext>();
             _services.AddScoped<IQueryLayerComposer, QueryLayerComposer>();
+            _services.TryAddSingleton<IExceptionHandler, ExceptionHandler>();
+            _services.TryAddScoped<IJsonApiExceptionFilter, JsonApiExceptionFilter>();
+            _services.TryAddScoped<IJsonApiTypeMatchFilter, IncomingTypeMatchFilter>();
 
             AddServerSerialization();
             AddQueryStringParameterServices();
             if (_options.EnableResourceHooks)
+            {
                 AddResourceHooks();
+            }
 
             _services.AddScoped<IInverseRelationships, InverseRelationships>();
         }
@@ -233,7 +240,7 @@ namespace JsonApiDotNetCore.Builders
             _services.AddScoped<IQueryConstraintProvider>(sp => sp.GetService<IPaginationQueryStringParameterReader>());
             _services.AddScoped<IQueryConstraintProvider>(sp => sp.GetService<IResourceDefinitionQueryableParameterReader>());
 
-            _services.AddScoped<IQueryStringActionFilter, QueryStringActionFilter>();
+            _services.TryAddScoped<IQueryStringActionFilter, QueryStringActionFilter>();
             _services.AddScoped<IQueryStringReader, QueryStringReader>();
             _services.AddSingleton<IRequestQueryStringAccessor, RequestQueryStringAccessor>();
         }
@@ -266,8 +273,6 @@ namespace JsonApiDotNetCore.Builders
             _services.TryAddSingleton<IJsonApiRoutingConvention, JsonApiRoutingConvention>();
             _services.TryAddSingleton<IResourceGraphBuilder, ResourceGraphBuilder>();
             _services.TryAddSingleton<IServiceDiscoveryFacade>(sp => new ServiceDiscoveryFacade(_services, sp.GetRequiredService<IResourceGraphBuilder>()));
-            _services.TryAddScoped<IJsonApiExceptionFilterProvider, JsonApiExceptionFilterProvider>();
-            _services.TryAddScoped<IJsonApiTypeMatchFilterProvider, JsonApiTypeMatchFilterProvider>();
         }
     }
 }

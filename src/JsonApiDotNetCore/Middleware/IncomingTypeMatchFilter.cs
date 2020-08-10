@@ -11,7 +11,7 @@ namespace JsonApiDotNetCore.Middleware
     /// <summary>
     /// Action filter used to verify the incoming type matches the target type, else return a 409
     /// </summary>
-    public sealed class IncomingTypeMatchFilter : IActionFilter
+    public sealed class IncomingTypeMatchFilter : IJsonApiTypeMatchFilter
     {
         private readonly IResourceContextProvider _provider;
 
@@ -44,5 +44,9 @@ namespace JsonApiDotNetCore.Middleware
         }
 
         public void OnActionExecuted(ActionExecutedContext context) { /* noop */ }
+    }
+
+    public interface IJsonApiTypeMatchFilter : IActionFilter
+    {
     }
 }

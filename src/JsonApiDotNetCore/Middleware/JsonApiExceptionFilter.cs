@@ -7,7 +7,7 @@ namespace JsonApiDotNetCore.Middleware
     /// <summary>
     /// Global exception filter that wraps any thrown error with a JsonApiException.
     /// </summary>
-    public class JsonApiExceptionFilter : ActionFilterAttribute, IExceptionFilter
+    public class JsonApiExceptionFilter : ActionFilterAttribute, IJsonApiExceptionFilter
     {
         private readonly IExceptionHandler _exceptionHandler;
 
