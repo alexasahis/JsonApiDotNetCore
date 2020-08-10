@@ -60,31 +60,21 @@ namespace JsonApiDotNetCore.Builders
         /// </summary>
         public void ConfigureMvc(Type dbContextType)
         {
-            RegisterJsonApiStartupServices();
-
-            IJsonApiTypeMatchFilter typeMatchFilterService;
-            IJsonApiExceptionFilter exceptionFilterService;
             IJsonApiRoutingConvention routingConvention;
+            RegisterJsonApiStartupServices();
 
             using (var intermediateProvider = _services.BuildServiceProvider())
             {
                 _resourceGraphBuilder = intermediateProvider.GetRequiredService<IResourceGraphBuilder>();
                 _serviceDiscoveryFacade = intermediateProvider.GetRequiredService<IServiceDiscoveryFacade>();
                 _dbContextType = dbContextType;
-
                 AddResourceTypesFromDbContext(intermediateProvider);
-
-                // exceptionFilterService = intermediateProvider.GetRequiredService<IJsonApiExceptionFilter>();
-                // typeMatchFilterService = intermediateProvider.GetRequiredService<IJsonApiTypeMatchFilter>();
                 routingConvention = intermediateProvider.GetRequiredService<IJsonApiRoutingConvention>();
             }
 
             _mvcBuilder.AddMvcOptions(options =>
             {
                 options.EnableEndpointRouting = true;
-                // options.Filters.Add(exceptionFilterService);
-                // options.Filters.Add(typeMatchFilterService);
-    
                 options.Filters.AddService<IJsonApiExceptionFilter>();
                 options.Filters.AddService<IJsonApiTypeMatchFilter>();
                 options.Filters.AddService<IQueryStringActionFilter>();
